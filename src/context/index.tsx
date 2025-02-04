@@ -51,8 +51,8 @@ createAppKit({
   ],
   defaultNetwork: sepolia,
   metadata: {
-    name: 'Ouf',
-    description: 'Our friendly assistant',
+    name: 'Ouf!',
+    description: "Create and personalize an AI assistant tailored to your organization's needs",
     url: 'https://ouf.netlify.app',
     icons: ['./favicon.ico'],
   },

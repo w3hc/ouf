@@ -87,23 +87,24 @@ export default function Home() {
 
   return (
     <>
-      {/* <NextSeo
-        title={seoTitle}
+      <NextSeo
+        title="Ouf!"
         titleTemplate="%s"
-        description={seoDescription}
-        canonical={SITE_URL}
+        description="Create and personalize an AI assistant tailored to your organization's needs"
+        canonical="https://ouf.netlify.app"
         openGraph={{
           type: 'website',
-          url: SITE_URL,
-          title: seoTitle,
-          description: seoDescription,
-          site_name: 'Francesca - AI Assistant',
+          url: 'https://ouf.netlify.app',
+          title: 'Ouf!',
+          description:
+            "Create and personalize an AI assistant tailored to your organization's needs",
+          site_name: 'Ouf - AI Assistant',
           images: [
             {
-              url: `${SITE_URL}/huangshan.png`,
+              url: 'https://ouf.netlify.app/huangshan.png',
               width: 1200,
               height: 630,
-              alt: "Julien's AI Assistant",
+              alt: 'Ouf AI Assistant',
             },
           ],
         }}
@@ -111,7 +112,7 @@ export default function Home() {
           cardType: 'summary_large_image',
           site: '@w3hc8',
         }}
-      /> */}
+      />
       <Container maxW="container.sm" py={20}>
         <Text mb={4}>C&apos;est ouf!</Text>
         {isConnected && (
