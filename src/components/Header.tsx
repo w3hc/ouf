@@ -43,7 +43,7 @@ export default function Header() {
       <Flex justify="space-between" align="center" px={4}>
         <Link href="/">
           <Heading as="h3" size="md" textAlign="center">
-            Genji
+            Ouf
           </Heading>
         </Link>
         <Flex gap={2} align="center">

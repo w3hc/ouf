@@ -1,6 +1,8 @@
-# Genji
+# Ouf
 
-A Next.js Web3 app template.
+Our friendly assistant.
+
+Create and personalize an AI assistant tailored to your organization's needs.
 
 ## Install
 
