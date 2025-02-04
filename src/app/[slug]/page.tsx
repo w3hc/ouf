@@ -25,13 +25,12 @@ interface PageProps {
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, isUser }) => (
-  // <Box w="full" py={6} borderBottom="1px solid" borderColor="gray.800">
   <Box w="full" py={6}>
-    <Box maxW="container.md" mx="auto">
+    <Container maxW="container.md" px={4}>
       <Text color={isUser ? 'blue.400' : 'white'} whiteSpace="pre-wrap">
         {message}
       </Text>
-    </Box>
+    </Container>
   </Box>
 )
 
@@ -89,7 +88,7 @@ export default function AssistantPage({ params }: PageProps) {
   }
 
   return (
-    <Box minH="calc(100vh - 80px)" display="flex" flexDirection="column">
+    <Box minH="calc(100vh - 80px)" display="flex" flexDirection="column" bg="black">
       {/* Edit Button */}
       <Flex position="fixed" top="80px" right={4} zIndex={10}>
         <Link href={`/${slug}/edit`}>
@@ -107,49 +106,50 @@ export default function AssistantPage({ params }: PageProps) {
       </Flex>
 
       {/* Messages */}
-      <Box flex="1" overflowY="auto">
-        <VStack spacing={0} align="stretch">
-          {messages.map((message, index) => (
-            <ChatMessage key={index} message={message.text} isUser={message.isUser} />
-          ))}
-          {isTyping && (
-            // <Box p={6} borderBottom="1px solid" borderColor="gray.800">
-            // <Box p={6}>
-            <Box p={0}>
-              <Box maxW="container.md" mx="auto">
-                <Image priority width="120" height="120" alt="loader" src="/loader.svg" />
+      <Box flex="1" overflowY="auto" px={4}>
+        <Container maxW="container.md" h="full" px={0}>
+          <VStack spacing={0} align="stretch">
+            {messages.map((message, index) => (
+              <ChatMessage key={index} message={message.text} isUser={message.isUser} />
+            ))}
+            {isTyping && (
+              <Box p={0}>
+                <Container maxW="container.md" mx="auto">
+                  <Image priority width="120" height="120" alt="loader" src="/loader.svg" />
+                </Container>
               </Box>
-            </Box>
-          )}
-          <div ref={messagesEndRef} />
-        </VStack>
+            )}
+            <div ref={messagesEndRef} />
+          </VStack>
+        </Container>
       </Box>
 
       {/* Input Form */}
-      {/* <Box as="form" onSubmit={handleSubmit} borderTop="1px solid" borderColor="gray.800" p={4}> */}
+      {/* <Box as="form" onSubmit={handleSubmit} p={4} borderTop="1px solid" borderColor="gray.800"> */}
       <Box as="form" onSubmit={handleSubmit} p={4}>
-        <Flex maxW="container.md" mx="auto" gap={2}>
-          <Input
-            value={inputValue}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
-            size="lg"
-            // border="1px solid"
-            borderColor="gray.700"
-            _focus={{
-              borderColor: 'blue.500',
-              boxShadow: 'none',
-            }}
-          />
-          <Button
-            type="submit"
-            colorScheme="blue"
-            size="lg"
-            isDisabled={!inputValue.trim() || isTyping}
-          >
-            <SendIcon size={20} />
-          </Button>
-        </Flex>
+        <Container maxW="container.md" mx="auto">
+          <Flex gap={2}>
+            <Input
+              value={inputValue}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value)}
+              placeholder="Type your message..."
+              size="lg"
+              borderColor="gray.700"
+              _focus={{
+                borderColor: 'blue.500',
+                boxShadow: 'none',
+              }}
+            />
+            <Button
+              type="submit"
+              colorScheme="blue"
+              size="lg"
+              isDisabled={!inputValue.trim() || isTyping}
+            >
+              <SendIcon size={20} />
+            </Button>
+          </Flex>
+        </Container>
       </Box>
     </Box>
   )
