@@ -20,25 +20,6 @@ export default function AssistantPage({ params }: PageProps) {
 
   return (
     <Container maxW="container.sm" py={20}>
-      <Flex
-        position="fixed"
-        top="80px" // Added 80px to account for the header height
-        right={4}
-        zIndex={10}
-      >
-        <Link href={`/${slug}`}>
-          <Button
-            size="sm"
-            bg="blue.500"
-            color="white"
-            _hover={{
-              bg: 'blue.600',
-            }}
-          >
-            View
-          </Button>
-        </Link>
-      </Flex>
       <Box>
         <Heading as="h1" size="xl" mb={6}>
           {slug} dashboard

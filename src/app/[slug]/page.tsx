@@ -90,7 +90,7 @@ export default function AssistantPage({ params }: PageProps) {
   return (
     <Box minH="calc(100vh - 80px)" display="flex" flexDirection="column" bg="black">
       {/* Edit Button */}
-      <Flex position="fixed" top="80px" right={4} zIndex={10}>
+      {/* <Flex position="fixed" top="80px" right={4} zIndex={10}>
         <Link href={`/${slug}/edit`}>
           <Button
             size="sm"
@@ -103,7 +103,7 @@ export default function AssistantPage({ params }: PageProps) {
             Edit
           </Button>
         </Link>
-      </Flex>
+      </Flex> */}
 
       {/* Messages */}
       <Box flex="1" overflowY="auto" px={4}>
