@@ -5,6 +5,7 @@ import { useAppKitAccount, useAppKitNetwork, useAppKitProvider } from '@reown/ap
 import { BrowserProvider, parseEther, formatEther } from 'ethers'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { NextSeo } from 'next-seo'
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
@@ -85,42 +86,70 @@ export default function Home() {
   const hasEnoughBalance = Number(balance) >= 0.0001
 
   return (
-    <Container maxW="container.sm" py={20}>
-      <Text mb={4}>Hello world!</Text>
-      {isConnected && (
-        <Tooltip
-          label={!hasEnoughBalance ? 'Please connect with an account that has a bit of ETH' : ''}
-          isDisabled={hasEnoughBalance}
-          hasArrow
-          bg="black"
-          color="white"
-          borderWidth="1px"
-          borderColor="red.500"
-          borderRadius="md"
-          p={2}
-        >
-          <Button
-            onClick={handleSend}
-            isLoading={isLoading}
-            loadingText="Sending..."
-            bg="#45a2f8"
+    <>
+      <NextSeo
+        title="Ouf!"
+        titleTemplate="%s"
+        description="Create and personalize an AI assistant tailored to your organization's needs"
+        canonical="https://ouf.netlify.app"
+        openGraph={{
+          type: 'website',
+          url: 'https://ouf.netlify.app',
+          title: 'Ouf!',
+          description:
+            "Create and personalize an AI assistant tailored to your organization's needs",
+          site_name: 'Ouf - AI Assistant',
+          images: [
+            {
+              url: 'https://ouf.netlify.app/huangshan.png',
+              width: 1200,
+              height: 630,
+              alt: 'Ouf AI Assistant',
+            },
+          ],
+        }}
+        twitter={{
+          cardType: 'summary_large_image',
+          site: '@w3hc8',
+        }}
+      />
+      <Container maxW="container.sm" py={20}>
+        <Text mb={4}>C&apos;est ouf!</Text>
+        {isConnected && (
+          <Tooltip
+            label={!hasEnoughBalance ? 'Please connect with an account that has a bit of ETH' : ''}
+            isDisabled={hasEnoughBalance}
+            hasArrow
+            bg="black"
             color="white"
-            _hover={{
-              bg: '#3182ce',
-            }}
-            isDisabled={!hasEnoughBalance}
+            borderWidth="1px"
+            borderColor="red.500"
+            borderRadius="md"
+            p={2}
           >
-            Send 0.0001 ETH to self
-          </Button>
-        </Tooltip>
-      )}
-      {txHash && isConnected && (
-        <Text py={4} fontSize="14px" color="#45a2f8">
-          <Link target="_blank" rel="noopener noreferrer" href={txLink ? txLink : ''}>
-            {txHash}
-          </Link>
-        </Text>
-      )}
-    </Container>
+            <Button
+              onClick={handleSend}
+              isLoading={isLoading}
+              loadingText="Sending..."
+              bg="#45a2f8"
+              color="white"
+              _hover={{
+                bg: '#3182ce',
+              }}
+              isDisabled={!hasEnoughBalance}
+            >
+              Send 0.0001 ETH to self
+            </Button>
+          </Tooltip>
+        )}
+        {txHash && isConnected && (
+          <Text py={4} fontSize="14px" color="#45a2f8">
+            <Link target="_blank" rel="noopener noreferrer" href={txLink ? txLink : ''}>
+              {txHash}
+            </Link>
+          </Text>
+        )}
+      </Container>
+    </>
   )
 }

@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Flex,
-  Image,
   Heading,
   Menu,
   MenuButton,
@@ -16,11 +15,13 @@ import { useAppKit } from '@reown/appkit/react'
 import { useAppKitAccount, useDisconnect } from '@reown/appkit/react'
 import Link from 'next/link'
 import { HamburgerIcon } from '@chakra-ui/icons'
+import { usePathname } from 'next/navigation'
 
 export default function Header() {
   const { open } = useAppKit()
-  const { isConnected, address } = useAppKitAccount()
+  const { isConnected } = useAppKitAccount()
   const { disconnect } = useDisconnect()
+  const pathname = usePathname()
 
   const handleConnect = () => {
     try {
@@ -37,6 +38,11 @@ export default function Header() {
       console.error('Disconnect error:', error)
     }
   }
+
+  // Check if we're on an assistant page and if it's the edit view
+  const assistantMatch = pathname.match(/^\/([^\/]+)(\/edit)?$/)
+  const currentAssistant = assistantMatch?.[1]
+  const isEditPage = pathname.endsWith('/edit')
 
   return (
     <Box as="header" py={4} position="fixed" w="100%" top={0} zIndex={10}>
@@ -87,9 +93,26 @@ export default function Header() {
               size="sm"
             />
             <MenuList>
-              <Link href="/new" color="white">
-                <MenuItem fontSize="md">New page</MenuItem>
+              <Link href="/francesca">
+                <MenuItem fontSize="md">Francesca</MenuItem>
               </Link>
+              <Link href="/create">
+                <MenuItem fontSize="md">Create</MenuItem>
+              </Link>
+              {currentAssistant && (
+                <Link href={isEditPage ? `/${currentAssistant}` : `/${currentAssistant}/edit`}>
+                  <MenuItem
+                    fontSize="md"
+                    color={isEditPage ? 'blue.500' : 'red.500'}
+                    _hover={{
+                      bg: isEditPage ? 'blue.50' : 'red.50',
+                      color: isEditPage ? 'blue.600' : 'red.600',
+                    }}
+                  >
+                    {isEditPage ? 'View Assistant' : 'Edit Assistant'}
+                  </MenuItem>
+                </Link>
+              )}
             </MenuList>
           </Menu>
         </Flex>
