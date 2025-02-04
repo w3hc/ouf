@@ -86,7 +86,7 @@ export default function Home() {
 
   return (
     <Container maxW="container.sm" py={20}>
-      <Text mb={4}>Hello world!</Text>
+      <Text mb={4}>C&apos;est ouf!</Text>
       {isConnected && (
         <Tooltip
           label={!hasEnoughBalance ? 'Please connect with an account that has a bit of ETH' : ''}

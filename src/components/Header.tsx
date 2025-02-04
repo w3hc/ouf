@@ -87,8 +87,14 @@ export default function Header() {
               size="sm"
             />
             <MenuList>
-              <Link href="/new" color="white">
-                <MenuItem fontSize="md">New page</MenuItem>
+              <Link href="/francesca" color="white">
+                <MenuItem fontSize="md">Francesca</MenuItem>
+              </Link>
+              <Link href="/francesca/edit" color="white">
+                <MenuItem fontSize="md">Francesca edit</MenuItem>
+              </Link>
+              <Link href="/create" color="white">
+                <MenuItem fontSize="md">Create</MenuItem>
               </Link>
             </MenuList>
           </Menu>
