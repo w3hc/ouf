@@ -4,6 +4,8 @@ Our friendly assistant.
 
 Create and personalize an AI assistant tailored to your organization's needs.
 
+Live at https://ouf.netlify.app
+
 ## Install
 
 ```bash
