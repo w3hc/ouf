@@ -229,6 +229,7 @@ export default function AssistantPage({ params }: PageProps) {
         body: JSON.stringify({
           message: inputValue,
           conversationId: conversationId,
+          walletAddress: address || '',
         }),
       })
 
