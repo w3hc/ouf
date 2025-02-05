@@ -10,18 +10,80 @@ import {
   MenuList,
   MenuItem,
   IconButton,
+  useToast,
 } from '@chakra-ui/react'
 import { useAppKit } from '@reown/appkit/react'
-import { useAppKitAccount, useDisconnect } from '@reown/appkit/react'
+import { useAppKitAccount, useDisconnect, useAppKitProvider } from '@reown/appkit/react'
 import Link from 'next/link'
 import { HamburgerIcon } from '@chakra-ui/icons'
 import { usePathname } from 'next/navigation'
+import { BrowserProvider } from 'ethers'
+import { useEffect } from 'react'
 
 export default function Header() {
   const { open } = useAppKit()
-  const { isConnected } = useAppKitAccount()
+  const { address, isConnected } = useAppKitAccount()
+  const { walletProvider } = useAppKitProvider('eip155')
   const { disconnect } = useDisconnect()
   const pathname = usePathname()
+  const toast = useToast()
+
+  const handleSignIn = async () => {
+    try {
+      console.log('🔵 STARTING SIGN IN FOR ADDRESS:', address)
+
+      const messageResponse = await fetch('http://localhost:3000/auth/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address }),
+      })
+
+      const { message } = await messageResponse.json()
+      console.log('📩 Message to sign:', message)
+
+      const provider = new BrowserProvider(walletProvider as any)
+      const signer = await provider.getSigner()
+      const signature = await signer.signMessage(message)
+
+      const verifyResponse = await fetch('http://localhost:3000/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          signature,
+          address,
+        }),
+      })
+
+      const result = await verifyResponse.json()
+
+      if (!result.verified) {
+        throw new Error('Signature verification failed')
+      }
+
+      console.log('🎉 SUCCESSFULLY AUTHENTICATED ADDRESS:', result.address)
+    } catch (error: any) {
+      console.error('❌ Authentication error:', error)
+      toast({
+        title: 'Authentication failed',
+        description: error.message || 'Failed to authenticate',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+    }
+  }
+
+  // Effect to trigger signing when wallet is connected
+  useEffect(() => {
+    if (isConnected && address && walletProvider) {
+      handleSignIn()
+    }
+  }, [isConnected, address, walletProvider])
 
   const handleConnect = () => {
     try {
