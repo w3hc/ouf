@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import remarkGfm from 'remark-gfm'
+import { useAppKitAccount } from '@reown/appkit/react'
 
 interface Message {
   text: string
@@ -143,7 +144,11 @@ const MarkdownComponents = {
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, isUser }) => (
   <Box w="full" py={6}>
     <Container maxW="container.md" px={4}>
-      <Box color={isUser ? 'blue.400' : 'white'}>
+      <Box
+        color={
+          isUser ? 'blue.400' : message === 'Please login to chat with me! 😉' ? 'red.400' : 'white'
+        }
+      >
         {isUser ? (
           <Text whiteSpace="pre-wrap">{message}</Text>
         ) : (
@@ -158,6 +163,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isUser }) => (
 
 export default function AssistantPage({ params }: PageProps) {
   const { slug } = params
+  const { address, isConnected } = useAppKitAccount()
   const toast = useToast()
 
   if (!pages.includes(slug)) {
@@ -187,6 +193,15 @@ export default function AssistantPage({ params }: PageProps) {
     e.preventDefault()
 
     if (!inputValue.trim()) {
+      return
+    }
+
+    if (!address) {
+      const loginMessage: Message = {
+        text: 'Please login to chat with me! 😉',
+        isUser: false,
+      }
+      setMessages(prev => [...prev, loginMessage])
       return
     }
 
