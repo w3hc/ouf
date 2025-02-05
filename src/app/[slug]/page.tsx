@@ -1,12 +1,15 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Container, Box, Button, Flex, Input, VStack, Text } from '@chakra-ui/react'
+import { Container, Box, Button, Flex, Input, VStack, Text, useToast, Link } from '@chakra-ui/react'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { SendIcon } from 'lucide-react'
 import pages from '../../../pages.json'
 import Image from 'next/image'
+import ReactMarkdown from 'react-markdown'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import remarkGfm from 'remark-gfm'
 
 interface Message {
   text: string
@@ -24,18 +27,138 @@ interface PageProps {
   }
 }
 
+interface ApiResponse {
+  answer: string
+  usage: {
+    costs: {
+      inputCost: number
+      outputCost: number
+      totalCost: number
+      inputTokens: number
+      outputTokens: number
+    }
+    timestamp: string
+  }
+  conversationId: string
+}
+
+const MarkdownComponents = {
+  p: (props: any) => (
+    <Text mb={2} lineHeight="tall" color="inherit">
+      {props.children}
+    </Text>
+  ),
+  h1: (props: any) => (
+    <Text as="h1" fontSize="2xl" fontWeight="bold" my={4} color="inherit">
+      {props.children}
+    </Text>
+  ),
+  h2: (props: any) => (
+    <Text as="h2" fontSize="xl" fontWeight="bold" my={3} color="inherit">
+      {props.children}
+    </Text>
+  ),
+  h3: (props: any) => (
+    <Text as="h3" fontSize="lg" fontWeight="bold" my={2} color="inherit">
+      {props.children}
+    </Text>
+  ),
+  ul: (props: any) => (
+    <Box as="ul" pl={4} my={2}>
+      {props.children}
+    </Box>
+  ),
+  ol: (props: any) => (
+    <Box as="ol" pl={4} my={2}>
+      {props.children}
+    </Box>
+  ),
+  li: (props: any) => (
+    <Box as="li" mb={1}>
+      {props.children}
+    </Box>
+  ),
+  blockquote: (props: any) => (
+    <Box borderLeftWidth="4px" borderLeftColor="gray.200" pl={4} py={2} my={4}>
+      {props.children}
+    </Box>
+  ),
+  code: ({ inline, className, children }: any) => {
+    const match = /language-(\w+)/.exec(className || '')
+    const language = match ? match[1] : ''
+
+    if (inline) {
+      return (
+        <Text as="code" px={1} bg="gray.700" borderRadius="sm" fontSize="0.875em">
+          {children}
+        </Text>
+      )
+    }
+
+    return (
+      <Box my={4}>
+        <SyntaxHighlighter
+          language={language}
+          style={tomorrow}
+          customStyle={{ borderRadius: '8px' }}
+        >
+          {String(children).replace(/\n$/, '')}
+        </SyntaxHighlighter>
+      </Box>
+    )
+  },
+  pre: (props: any) => <Box {...props} />,
+  strong: (props: any) => (
+    <Text as="strong" fontWeight="bold">
+      {props.children}
+    </Text>
+  ),
+  em: (props: any) => (
+    <Text as="em" fontStyle="italic">
+      {props.children}
+    </Text>
+  ),
+  a: (props: any) => (
+    <Link
+      color="blue.300"
+      href={props.href}
+      isExternal
+      textDecoration="underline"
+      _hover={{
+        color: 'blue.200',
+        textDecoration: 'none',
+      }}
+      onClick={e => {
+        if (!props.href || props.href === '#') {
+          e.preventDefault()
+          return
+        }
+      }}
+    >
+      {props.children}
+    </Link>
+  ),
+}
+
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, isUser }) => (
   <Box w="full" py={6}>
     <Container maxW="container.md" px={4}>
-      <Text color={isUser ? 'blue.400' : 'white'} whiteSpace="pre-wrap">
-        {message}
-      </Text>
+      <Box color={isUser ? 'blue.400' : 'white'}>
+        {isUser ? (
+          <Text whiteSpace="pre-wrap">{message}</Text>
+        ) : (
+          <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
+            {message}
+          </ReactMarkdown>
+        )}
+      </Box>
     </Container>
   </Box>
 )
 
 export default function AssistantPage({ params }: PageProps) {
   const { slug } = params
+  const toast = useToast()
 
   if (!pages.includes(slug)) {
     notFound()
@@ -43,12 +166,13 @@ export default function AssistantPage({ params }: PageProps) {
 
   const [messages, setMessages] = useState<Message[]>([
     {
-      text: `Hello! I'm ${slug}. How can I help you today?`,
+      text: `Hello! I'm ${slug}. How can I help you today? I speak more than 100 languages so feel free to use your own!`,
       isUser: false,
     },
   ])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [conversationId, setConversationId] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const scrollToBottom = () => {
@@ -75,36 +199,61 @@ export default function AssistantPage({ params }: PageProps) {
     setInputValue('')
     setIsTyping(true)
 
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
+      const formData = new FormData()
+      formData.append('message', inputValue)
+      if (conversationId) {
+        formData.append('conversationId', conversationId)
+      }
+
+      const response = await fetch('/api/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputValue,
+          conversationId: conversationId,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const data: ApiResponse = await response.json()
+
+      setConversationId(data.conversationId)
+
       const assistantMessage: Message = {
-        text: `As ${slug}, I acknowledge your message. This is a placeholder response as the actual API integration is pending. This is a placeholder response as the actual API integration is pending. This is a placeholder response as the actual API integration is pending. This is a placeholder response as the actual API integration is pending.`,
+        text: data.answer,
         isUser: false,
       }
 
       setMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Error calling API:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to get response from assistant',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Add error message to chat
+      const errorMessage: Message = {
+        text: 'Sorry, I encountered an error processing your request. Please try again.',
+        isUser: false,
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
-    }, 1000)
+    }
   }
 
   return (
     <Box minH="calc(100vh - 80px)" display="flex" flexDirection="column" bg="black">
-      {/* Edit Button */}
-      {/* <Flex position="fixed" top="80px" right={4} zIndex={10}>
-        <Link href={`/${slug}/edit`}>
-          <Button
-            size="sm"
-            bg="red.500"
-            color="white"
-            _hover={{
-              bg: 'red.600',
-            }}
-          >
-            Edit
-          </Button>
-        </Link>
-      </Flex> */}
-
       {/* Messages */}
       <Box flex="1" overflowY="auto" px={4}>
         <Container maxW="container.md" h="full" px={0}>
@@ -125,7 +274,6 @@ export default function AssistantPage({ params }: PageProps) {
       </Box>
 
       {/* Input Form */}
-      {/* <Box as="form" onSubmit={handleSubmit} p={4} borderTop="1px solid" borderColor="gray.800"> */}
       <Box as="form" onSubmit={handleSubmit} p={4}>
         <Container maxW="container.md" mx="auto">
           <Flex gap={2}>

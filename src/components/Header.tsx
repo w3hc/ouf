@@ -97,7 +97,7 @@ export default function Header() {
                 <MenuItem fontSize="md">Francesca</MenuItem>
               </Link>
               <Link href="/create">
-                <MenuItem fontSize="md">Create</MenuItem>
+                <MenuItem fontSize="md">Create yours!</MenuItem>
               </Link>
               {currentAssistant && (
                 <Link href={isEditPage ? `/${currentAssistant}` : `/${currentAssistant}/edit`}>
