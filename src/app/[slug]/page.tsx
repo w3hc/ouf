@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Container, Box, Button, Flex, Input, VStack, Text } from '@chakra-ui/react'
+import { Container, Box, Button, Flex, Input, VStack, Text, useToast } from '@chakra-ui/react'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { SendIcon } from 'lucide-react'
 import pages from '../../../pages.json'
 import Image from 'next/image'
@@ -24,6 +23,21 @@ interface PageProps {
   }
 }
 
+interface ApiResponse {
+  answer: string
+  usage: {
+    costs: {
+      inputCost: number
+      outputCost: number
+      totalCost: number
+      inputTokens: number
+      outputTokens: number
+    }
+    timestamp: string
+  }
+  conversationId: string
+}
+
 const ChatMessage: React.FC<ChatMessageProps> = ({ message, isUser }) => (
   <Box w="full" py={6}>
     <Container maxW="container.md" px={4}>
@@ -36,6 +50,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isUser }) => (
 
 export default function AssistantPage({ params }: PageProps) {
   const { slug } = params
+  const toast = useToast()
 
   if (!pages.includes(slug)) {
     notFound()
@@ -49,6 +64,7 @@ export default function AssistantPage({ params }: PageProps) {
   ])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [conversationId, setConversationId] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const scrollToBottom = () => {
@@ -75,36 +91,61 @@ export default function AssistantPage({ params }: PageProps) {
     setInputValue('')
     setIsTyping(true)
 
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
+      const formData = new FormData()
+      formData.append('message', inputValue)
+      if (conversationId) {
+        formData.append('conversationId', conversationId)
+      }
+
+      const response = await fetch('/api/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputValue,
+          conversationId: conversationId,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const data: ApiResponse = await response.json()
+
+      setConversationId(data.conversationId)
+
       const assistantMessage: Message = {
-        text: `As ${slug}, I acknowledge your message. This is a placeholder response as the actual API integration is pending. This is a placeholder response as the actual API integration is pending. This is a placeholder response as the actual API integration is pending. This is a placeholder response as the actual API integration is pending.`,
+        text: data.answer,
         isUser: false,
       }
 
       setMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Error calling API:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to get response from assistant',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+
+      // Add error message to chat
+      const errorMessage: Message = {
+        text: 'Sorry, I encountered an error processing your request. Please try again.',
+        isUser: false,
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
-    }, 1000)
+    }
   }
 
   return (
     <Box minH="calc(100vh - 80px)" display="flex" flexDirection="column" bg="black">
-      {/* Edit Button */}
-      {/* <Flex position="fixed" top="80px" right={4} zIndex={10}>
-        <Link href={`/${slug}/edit`}>
-          <Button
-            size="sm"
-            bg="red.500"
-            color="white"
-            _hover={{
-              bg: 'red.600',
-            }}
-          >
-            Edit
-          </Button>
-        </Link>
-      </Flex> */}
-
       {/* Messages */}
       <Box flex="1" overflowY="auto" px={4}>
         <Container maxW="container.md" h="full" px={0}>
@@ -125,7 +166,6 @@ export default function AssistantPage({ params }: PageProps) {
       </Box>
 
       {/* Input Form */}
-      {/* <Box as="form" onSubmit={handleSubmit} p={4} borderTop="1px solid" borderColor="gray.800"> */}
       <Box as="form" onSubmit={handleSubmit} p={4}>
         <Container maxW="container.md" mx="auto">
           <Flex gap={2}>
