@@ -6,6 +6,9 @@ Live at https://ouf.netlify.app
 
 Ouf UI interacts with [Fatou API](https://github.com/w3hc/fatou) (which uses Claude API).
 
+- OUF Governance Token contract repo: https://github.com/w3hc/ouf-contracts
+- Arbitrum Sepolia deployment: https://sepolia.arbiscan.io/address/0x7ee0e86167746378f1C5bF947EC08c3B55B6Bb80#code
+
 ## Install
 
 ```bash

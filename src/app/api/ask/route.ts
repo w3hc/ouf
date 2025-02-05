@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { message, conversationId } = body
+    const { message, conversationId, walletAddress } = body
 
     if (!message) {
       console.warn('❌ Missing message in request body')
@@ -70,6 +70,10 @@ export async function POST(request: NextRequest) {
 
     if (conversationId) {
       formData.append('conversationId', conversationId)
+    }
+
+    if (walletAddress) {
+      formData.append('walletAddress', walletAddress)
     }
 
     console.log('📡 Sending request to Fatou API...')
