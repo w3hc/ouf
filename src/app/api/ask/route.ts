@@ -17,32 +17,7 @@ interface FatouResponse {
   conversationId: string
 }
 
-// async function loadContextFiles() {
-//   try {
-//     const sourcesDir = path.join(process.cwd(), 'public', 'sources')
-
-//     console.log('📚 Loading context files from:', sourcesDir)
-
-//     // Read and combine all .md files from the sources directory
-//     const files = await fs.readdir(sourcesDir)
-//     const mdFiles = files.filter(file => file.endsWith('.md'))
-
-//     console.log('📑 Found markdown files:', mdFiles)
-
-//     const contents = await Promise.all(
-//       mdFiles.map(async file => {
-//         const content = await fs.readFile(path.join(sourcesDir, file), 'utf-8')
-//         console.log(`✅ Loaded ${file}: ${content.length} characters`)
-//         return `# ${file}\n\n${content}`
-//       })
-//     )
-
-//     return contents.join('\n\n')
-//   } catch (error) {
-//     console.error('❌ Error loading context files:', error)
-//     throw error
-//   }
-// }
+const FATOU_API_URL = process.env.NEXT_PUBLIC_FATOU_API_URL
 
 // Handle OPTIONS requests
 export async function OPTIONS() {
@@ -98,8 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📡 Sending request to Fatou API...')
-    const response = await fetch('http://193.108.55.119:3000/ai/ask', {
-      // const response = await fetch('http://localhost:3000/ai/ask', {
+    const response = await fetch(`${FATOU_API_URL}/ai/ask`, {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
