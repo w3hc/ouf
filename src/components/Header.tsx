@@ -32,7 +32,8 @@ export default function Header() {
     try {
       console.log('🔵 STARTING SIGN IN FOR ADDRESS:', address)
 
-      const messageResponse = await fetch('http://localhost:3000/auth/message', {
+      // const messageResponse = await fetch('http://localhost:3000/auth/message', {
+      const messageResponse = await fetch('http://193.108.55.119:3000/auth/message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +48,8 @@ export default function Header() {
       const signer = await provider.getSigner()
       const signature = await signer.signMessage(message)
 
-      const verifyResponse = await fetch('http://localhost:3000/auth/verify', {
+      // const verifyResponse = await fetch('http://localhost:3000/auth/verify', {
+      const verifyResponse = await fetch('http://193.108.55.119:3000/auth/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
