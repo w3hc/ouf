@@ -20,7 +20,12 @@ Create a `.env` file:
 cp .env.example .env
 ```
 
-Add your own keys in the `.env` file (you can get it in your [Reown dashboard](https://cloud.reown.com/)), then:
+Add your own keys in the `.env` file:
+
+- You can get it in your [Reown dashboard](https://cloud.reown.com/)
+- Ask Julien for a Fatou API key
+
+Then:
 
 ```bash
 pnpm dev
