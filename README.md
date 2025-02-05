@@ -1,6 +1,6 @@
-# Ouf
+# OUF
 
-**Our friendly assistant** (OUF) allows users to create and personalize an AI assistant tailored to their organization's needs.
+OUF (OUr Friendly assistant) allows users to create and personalize an AI assistant tailored to their organization's needs.
 
 Live at https://ouf.netlify.app
 
