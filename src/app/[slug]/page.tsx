@@ -12,6 +12,20 @@ import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import remarkGfm from 'remark-gfm'
 import { useAppKitAccount } from '@reown/appkit/react'
 
+async function validateAssistant(slug: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_FATOU_API_URL}/api-keys/details`)
+    if (!response.ok) {
+      return false
+    }
+    const assistants = await response.json()
+    return assistants.some((assistant: any) => assistant.slug === slug)
+  } catch (error) {
+    console.error('Error validating assistant:', error)
+    return false
+  }
+}
+
 interface Message {
   text: string
   isUser: boolean
@@ -166,9 +180,15 @@ export default function AssistantPage({ params }: PageProps) {
   const { address, isConnected } = useAppKitAccount()
   const toast = useToast()
 
-  if (!pages.includes(slug)) {
-    notFound()
-  }
+  useEffect(() => {
+    const checkAssistant = async () => {
+      const isValid = await validateAssistant(slug)
+      if (!isValid) {
+        notFound()
+      }
+    }
+    checkAssistant()
+  }, [slug])
 
   const [messages, setMessages] = useState<Message[]>([
     {
