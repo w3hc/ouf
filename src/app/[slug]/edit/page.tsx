@@ -185,7 +185,6 @@ export default function EditPage({ params }: PageProps) {
     setSelectedFile(file as any)
   }
 
-  // In handleUpload
   const handleUpload = async () => {
     if (!selectedFile || !address) return
 
@@ -194,18 +193,29 @@ export default function EditPage({ params }: PageProps) {
     formData.append('file', selectedFile)
 
     try {
+      // Format address using ethers getAddress
+      const checksummedAddress = getAddress(address)
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_FATOU_API_URL}/context-files/add-context`,
         {
           method: 'POST',
           headers: {
-            'x-wallet-address': address,
+            'x-wallet-address': checksummedAddress,
           },
           body: formData,
         }
       )
 
-      if (!response.ok) throw new Error('Failed to upload file')
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Upload error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText,
+        })
+        throw new Error('Failed to upload file')
+      }
 
       toast({
         title: 'Success',
@@ -216,7 +226,7 @@ export default function EditPage({ params }: PageProps) {
       })
 
       setSelectedFile(null)
-      fetchFiles()
+      fetchFiles() // Refresh the file list
     } catch (error) {
       console.error('Error uploading file:', error)
       toast({
@@ -231,24 +241,34 @@ export default function EditPage({ params }: PageProps) {
     }
   }
 
-  // In handleDelete
   const handleDelete = async (filename: string) => {
     if (!address) return
 
     try {
+      // Format address using ethers getAddress
+      const checksummedAddress = getAddress(address)
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_FATOU_API_URL}/context-files/delete-context`,
         {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'x-wallet-address': address,
+            'x-wallet-address': checksummedAddress,
           },
           body: JSON.stringify({ filename }),
         }
       )
 
-      if (!response.ok) throw new Error('Failed to delete file')
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Delete error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText,
+        })
+        throw new Error('Failed to delete file')
+      }
 
       toast({
         title: 'Success',
@@ -258,7 +278,7 @@ export default function EditPage({ params }: PageProps) {
         isClosable: true,
       })
 
-      fetchFiles()
+      fetchFiles() // Refresh the file list
     } catch (error) {
       console.error('Error deleting file:', error)
       toast({
