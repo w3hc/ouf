@@ -2,116 +2,88 @@
 
 import {
   Container,
-  Text,
+  VStack,
   Heading,
-  Box,
-  Button,
-  Input,
   FormControl,
   FormLabel,
-  VStack,
+  Input,
+  Button,
   useToast,
+  Text,
 } from '@chakra-ui/react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppKitAccount } from '@reown/appkit/react'
+import { getAddress } from 'ethers'
 
-interface Assistant {
-  slug: string
-  name: string
-  introPhrase: string
-  contextId: string
-  daoAddress: string
-  daoNetwork: string
-  adminAddress: string
+interface CreateAssistantData {
+  walletAddress?: string
+  slug?: string
+  assistantName?: string
+  introPhrase?: string
+  daoAddress?: string
+  daoNetwork?: string
 }
 
-export default function Create() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [assistantData, setAssistantData] = useState<Assistant[]>([])
-  const [formData, setFormData] = useState({
+export default function CreatePage() {
+  const router = useRouter()
+  const toast = useToast()
+  const { address } = useAppKitAccount()
+  const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState<CreateAssistantData>({
     slug: '',
     assistantName: '',
     introPhrase: '',
     daoAddress: '',
     daoNetwork: '',
   })
-  const { address } = useAppKitAccount()
-  const router = useRouter()
-  const toast = useToast()
-
-  // Load assistant data like in assistant page
-  useEffect(() => {
-    const fetchAssistantData = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_FATOU_API_URL}/api-keys/details`)
-        if (!response.ok) {
-          throw new Error('Failed to fetch assistant data')
-        }
-        const assistants = await response.json()
-        setAssistantData(assistants)
-      } catch (error) {
-        console.error('Error validating assistant:', error)
-        toast({
-          title: 'Error',
-          description: 'Failed to load assistant data',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        })
-      }
-    }
-
-    fetchAssistantData()
-  }, [toast])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!address) return
 
-    // Validate if slug already exists
-    if (assistantData.some(assistant => assistant.slug === formData.slug)) {
-      toast({
-        title: 'Error',
-        description: 'An assistant with this slug already exists',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-      return
-    }
-
-    if (!address) {
-      toast({
-        title: 'Error',
-        description: 'Please connect your wallet first',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      })
-      return
-    }
-
-    setIsSubmitting(true)
+    setIsLoading(true)
     try {
-      const response = await fetch('/api/api-keys', {
+      // Format the wallet address using ethers
+      const checksummedAddress = getAddress(address)
+
+      // Log the request details for debugging
+      const requestBody = {
+        walletAddress: checksummedAddress,
+        ...formData,
+      }
+      console.log('Sending request with:', {
+        body: requestBody,
+        masterKey: process.env.NEXT_PUBLIC_MASTER_KEY,
+      })
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_FATOU_API_URL}/api-keys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': process.env.NEXT_PUBLIC_FATOU_API_KEY || '',
+          'x-api-key': process.env.NEXT_PUBLIC_MASTER_KEY!,
         },
-        body: JSON.stringify({
-          walletAddress: address,
-          slug: formData.slug,
-          assistantName: formData.assistantName,
-          introPhrase: formData.introPhrase,
-          daoAddress: formData.daoAddress,
-          daoNetwork: formData.daoNetwork,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
+      const responseText = await response.text()
+      console.log('Raw response:', responseText)
+
       if (!response.ok) {
+        console.error('Create assistant error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: responseText,
+          sentData: {
+            address: checksummedAddress,
+            formData,
+          },
+        })
         throw new Error('Failed to create assistant')
       }
+
+      const data = JSON.parse(responseText)
+      console.log('Assistant created successfully:', data)
 
       toast({
         title: 'Success',
@@ -121,18 +93,19 @@ export default function Create() {
         isClosable: true,
       })
 
+      // Redirect to the new assistant's page
       router.push(`/${formData.slug}`)
     } catch (error) {
       console.error('Error creating assistant:', error)
       toast({
         title: 'Error',
-        description: 'Failed to create assistant',
+        description: 'Failed to create assistant. Please check the console for details.',
         status: 'error',
         duration: 5000,
         isClosable: true,
       })
     } finally {
-      setIsSubmitting(false)
+      setIsLoading(false)
     }
   }
 
@@ -144,81 +117,91 @@ export default function Create() {
     }))
   }
 
+  // Optional: validate DAO address if provided
+  const handleDaoAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target
+    try {
+      // Only format if there's a value
+      const formattedAddress = value ? getAddress(value) : value
+      setFormData(prev => ({
+        ...prev,
+        daoAddress: formattedAddress,
+      }))
+    } catch (error) {
+      // If invalid address, store as is (validation will be handled on submit)
+      setFormData(prev => ({
+        ...prev,
+        daoAddress: value,
+      }))
+    }
+  }
+
+  if (!address) {
+    return (
+      <Container maxW="container.sm" py={20}>
+        <Text>Please connect your wallet to create an assistant.</Text>
+      </Container>
+    )
+  }
+
   return (
     <Container maxW="container.sm" py={20}>
-      <VStack spacing={8} align="stretch">
-        <Box>
-          <Heading as="h1" size="xl" mb={6}>
-            Create Assistant
-          </Heading>
-          <Text mb={8}>
-            Create your own AI assistant tailored to your organization&apos;s needs.
-          </Text>
-        </Box>
+      <VStack spacing={8} as="form" onSubmit={handleSubmit}>
+        <Heading>Create New Assistant</Heading>
 
-        <Box as="form" onSubmit={handleSubmit}>
-          <VStack spacing={6} align="stretch">
-            <FormControl isRequired>
-              <FormLabel>Slug (URL identifier)</FormLabel>
-              <Input
-                name="slug"
-                value={formData.slug}
-                onChange={handleInputChange}
-                placeholder="e.g., my-assistant"
-              />
-            </FormControl>
+        <FormControl isRequired>
+          <FormLabel>Slug</FormLabel>
+          <Input
+            name="slug"
+            value={formData.slug}
+            onChange={handleInputChange}
+            placeholder="unique-assistant-name"
+          />
+        </FormControl>
 
-            <FormControl isRequired>
-              <FormLabel>Assistant Name</FormLabel>
-              <Input
-                name="assistantName"
-                value={formData.assistantName}
-                onChange={handleInputChange}
-                placeholder="e.g., Organization Helper"
-              />
-            </FormControl>
+        <FormControl isRequired>
+          <FormLabel>Assistant Name</FormLabel>
+          <Input
+            name="assistantName"
+            value={formData.assistantName}
+            onChange={handleInputChange}
+            placeholder="My Assistant"
+          />
+        </FormControl>
 
-            <FormControl>
-              <FormLabel>Introduction Phrase</FormLabel>
-              <Input
-                name="introPhrase"
-                value={formData.introPhrase}
-                onChange={handleInputChange}
-                placeholder="Custom greeting message"
-              />
-            </FormControl>
+        <FormControl isRequired>
+          <FormLabel>Introduction Phrase</FormLabel>
+          <Input
+            name="introPhrase"
+            value={formData.introPhrase}
+            onChange={handleInputChange}
+            placeholder="Hello! I'm here to help..."
+          />
+        </FormControl>
 
-            <FormControl>
-              <FormLabel>DAO Address</FormLabel>
-              <Input
-                name="daoAddress"
-                value={formData.daoAddress}
-                onChange={handleInputChange}
-                placeholder="Optional: Your DAO contract address"
-              />
-            </FormControl>
+        <FormControl>
+          <FormLabel>DAO Address (optional)</FormLabel>
+          <Input
+            name="daoAddress"
+            value={formData.daoAddress}
+            onChange={handleDaoAddressChange}
+            placeholder="0x..."
+          />
+        </FormControl>
 
-            <FormControl>
-              <FormLabel>DAO Network</FormLabel>
-              <Input
-                name="daoNetwork"
-                value={formData.daoNetwork}
-                onChange={handleInputChange}
-                placeholder="Optional: Network where your DAO is deployed"
-              />
-            </FormControl>
+        <FormControl>
+          <FormLabel>DAO Network (optional)</FormLabel>
+          <Input
+            name="daoNetwork"
+            value={formData.daoNetwork}
+            onChange={handleInputChange}
+            placeholder="e.g., 'base'"
+          />
+        </FormControl>
 
-            <Button
-              type="submit"
-              colorScheme="blue"
-              size="lg"
-              isLoading={isSubmitting}
-              loadingText="Creating..."
-            >
-              Create Assistant
-            </Button>
-          </VStack>
-        </Box>
+        <Button type="submit" colorScheme="blue" isLoading={isLoading} width="full">
+          Create Assistant
+        </Button>
       </VStack>
     </Container>
   )
