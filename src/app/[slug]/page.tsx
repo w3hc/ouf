@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Container, Box, Button, Flex, Input, VStack, Text, useToast, Link } from '@chakra-ui/react'
 import { notFound } from 'next/navigation'
 import { SendIcon } from 'lucide-react'
-import pages from '../../../pages.json'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -19,6 +18,7 @@ interface Assistant {
   contextId: string
   daoAddress: string
   daoNetwork: string
+  adminAddress: string
 }
 
 async function validateAssistant(slug: string): Promise<Assistant | null> {
@@ -190,6 +190,11 @@ export default function AssistantPage({ params }: PageProps) {
   const toast = useToast()
   const [assistantData, setAssistantData] = useState<Assistant | null>(null)
 
+  const isAdmin = useMemo(() => {
+    if (!address || !assistantData?.adminAddress) return false
+    return address.toLowerCase() === assistantData.adminAddress.toLowerCase()
+  }, [address, assistantData?.adminAddress])
+
   useEffect(() => {
     const checkAssistant = async () => {
       const data = await validateAssistant(slug)
@@ -255,12 +260,6 @@ export default function AssistantPage({ params }: PageProps) {
     setIsTyping(true)
 
     try {
-      const formData = new FormData()
-      formData.append('message', inputValue)
-      if (conversationId) {
-        formData.append('conversationId', conversationId)
-      }
-
       const response = await fetch('/api/ask', {
         method: 'POST',
         headers: {
@@ -269,7 +268,8 @@ export default function AssistantPage({ params }: PageProps) {
         body: JSON.stringify({
           message: inputValue,
           conversationId: conversationId,
-          walletAddress: address || '',
+          walletAddress: address,
+          contextId: assistantData?.contextId,
         }),
       })
 
@@ -278,7 +278,6 @@ export default function AssistantPage({ params }: PageProps) {
       }
 
       const data: ApiResponse = await response.json()
-
       setConversationId(data.conversationId)
 
       const assistantMessage: Message = {
