@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { message, conversationId, walletAddress } = body
+    const { message, conversationId, walletAddress, contextId } = body
 
     if (!message) {
       console.warn('❌ Missing message in request body')
@@ -53,15 +53,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_FATOU_API_KEY
-    if (!apiKey) {
-      console.error('❌ Missing Fatou API key in environment')
+    if (!walletAddress || !contextId) {
+      console.warn('❌ Missing required authentication parameters')
       return NextResponse.json(
         {
-          message: 'Server configuration error: Missing API key',
-          error: 'MISSING_API_KEY',
+          message: 'Wallet address and contextId are required',
+          error: 'MISSING_AUTH_PARAMS',
         },
-        { status: 500 }
+        { status: 400 }
       )
     }
 
@@ -72,15 +71,16 @@ export async function POST(request: NextRequest) {
       formData.append('conversationId', conversationId)
     }
 
-    if (walletAddress) {
-      formData.append('walletAddress', walletAddress)
-    }
-
-    console.log('📡 Sending request to Fatou API...')
+    console.log('📡 Sending request to Fatou API...', {
+      walletAddress,
+      contextId,
+      url: `${FATOU_API_URL}/ai/ask`,
+    })
     const response = await fetch(`${FATOU_API_URL}/ai/ask`, {
       method: 'POST',
       headers: {
-        'x-api-key': apiKey,
+        'x-wallet-address': walletAddress,
+        'x-context-id': contextId,
       },
       body: formData,
     })
