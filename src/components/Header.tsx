@@ -18,7 +18,17 @@ import Link from 'next/link'
 import { HamburgerIcon } from '@chakra-ui/icons'
 import { usePathname } from 'next/navigation'
 import { BrowserProvider } from 'ethers'
-import { useEffect } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+
+interface Assistant {
+  slug: string
+  name: string
+  introPhrase: string
+  contextId: string
+  daoAddress: string
+  daoNetwork: string
+  adminAddress: string
+}
 
 export default function Header() {
   const { open } = useAppKit()
@@ -27,6 +37,38 @@ export default function Header() {
   const { disconnect } = useDisconnect()
   const pathname = usePathname()
   const toast = useToast()
+  const [assistantData, setAssistantData] = useState<Assistant | null>(null)
+
+  // Check if we're on an assistant page and if it's the edit view
+  const assistantMatch = pathname.match(/^\/([^\/]+)(\/edit)?$/)
+  const currentAssistant = assistantMatch?.[1]
+  const isEditPage = pathname.endsWith('/edit')
+
+  // Add admin check
+  const isAdmin = useMemo(() => {
+    if (!address || !assistantData?.adminAddress) return false
+    return address.toLowerCase() === assistantData.adminAddress.toLowerCase()
+  }, [address, assistantData?.adminAddress])
+
+  // Fetch assistant data when on an assistant page
+  useEffect(() => {
+    const fetchAssistantData = async () => {
+      if (currentAssistant) {
+        try {
+          const response = await fetch('/api/assistants')
+          const assistants = await response.json()
+          const current = assistants.find((a: Assistant) => a.slug === currentAssistant)
+          setAssistantData(current || null)
+          console.log('🤖 ASSISTANT DATA:', current)
+          console.log(' Current user address:', address)
+        } catch (error) {
+          console.error('Error fetching assistant data:', error)
+        }
+      }
+    }
+
+    fetchAssistantData()
+  }, [currentAssistant])
 
   const handleSignIn = async () => {
     try {
@@ -107,11 +149,6 @@ export default function Header() {
     }
   }
 
-  // Check if we're on an assistant page and if it's the edit view
-  const assistantMatch = pathname.match(/^\/([^\/]+)(\/edit)?$/)
-  const currentAssistant = assistantMatch?.[1]
-  const isEditPage = pathname.endsWith('/edit')
-
   return (
     <Box as="header" py={4} position="fixed" w="100%" top={0} zIndex={10}>
       <Flex justify="space-between" align="center" px={4}>
@@ -167,7 +204,7 @@ export default function Header() {
               <Link href="/create">
                 <MenuItem fontSize="md">Create yours!</MenuItem>
               </Link>
-              {currentAssistant && (
+              {isAdmin && currentAssistant && (
                 <Link href={isEditPage ? `/${currentAssistant}` : `/${currentAssistant}/edit`}>
                   <MenuItem
                     fontSize="md"
