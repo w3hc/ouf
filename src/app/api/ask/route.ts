@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 import { promises as fs } from 'fs'
+import { getAddress } from 'ethers'
 
 interface FatouResponse {
   answer: string
@@ -42,6 +43,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { message, conversationId, walletAddress, contextId } = body
 
+    const checksummedAddress = getAddress(walletAddress)
+    console.log('Making request with checksummed address:', checksummedAddress)
+
     if (!message) {
       console.warn('❌ Missing message in request body')
       return NextResponse.json(
@@ -72,14 +76,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📡 Sending request to Fatou API...', {
-      walletAddress,
+      checksummedAddress,
       contextId,
       url: `${FATOU_API_URL}/ai/ask`,
     })
     const response = await fetch(`${FATOU_API_URL}/ai/ask`, {
       method: 'POST',
       headers: {
-        'x-wallet-address': walletAddress,
+        'x-wallet-address': checksummedAddress,
         'x-context-id': contextId,
       },
       body: formData,
