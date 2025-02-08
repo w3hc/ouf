@@ -94,7 +94,7 @@ export default function CreatePage() {
       })
 
       // Redirect to the new assistant's page
-      router.push(`/${formData.slug}`)
+      router.push(`/${formData.slug}/edit`)
     } catch (error) {
       console.error('Error creating assistant:', error)
       toast({
