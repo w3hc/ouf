@@ -80,11 +80,19 @@ export async function POST(request: NextRequest) {
       contextId,
       url: `${FATOU_API_URL}/ai/ask`,
     })
+
+    console.log('Request headers:', {
+      'x-wallet-address': checksummedAddress,
+      'x-context-id': contextId,
+    })
+
     const response = await fetch(`${FATOU_API_URL}/ai/ask`, {
       method: 'POST',
       headers: {
         'x-wallet-address': checksummedAddress,
         'x-context-id': contextId,
+        Accept: 'application/json',
+        'Content-Type': 'multipart/form-data',
       },
       body: formData,
     })
