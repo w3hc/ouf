@@ -274,6 +274,12 @@ export default function AssistantPage({ params }: PageProps) {
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+        })
         throw new Error(`API error: ${response.status}`)
       }
 
