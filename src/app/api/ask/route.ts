@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'x-wallet-address': checksummedAddress,
         'x-context-id': contextId,
-        Accept: 'application/json',
-        'Content-Type': 'multipart/form-data',
+        // Accept: 'application/json',
+        // 'Content-Type': 'multipart/form-data',
       },
       body: formData,
     })
