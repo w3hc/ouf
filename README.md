@@ -4,7 +4,7 @@ OUF (OUr Friendly assistant) allows users to create and personalize an AI assist
 
 Live at https://ouf.netlify.app
 
-Ouf UI interacts with [Fatou API](https://github.com/w3hc/fatou) (which uses Claude API).
+Ouf UI interacts with [Fatou API](https://github.com/w3hc/fatou) (which uses Claude API). You can also view its Swagger UI [here](https://fatou.w3hc.org/api).
 
 - OUF Governance Token contract repo: https://github.com/w3hc/ouf-contracts
 - Arbitrum Sepolia deployment: https://sepolia.arbiscan.io/address/0x7ee0e86167746378f1C5bF947EC08c3B55B6Bb80#code
